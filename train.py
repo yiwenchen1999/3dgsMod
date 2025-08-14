@@ -130,7 +130,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         # covering the background
         if viewpoint_cam.alpha_mask is not None:
             alpha_mask = viewpoint_cam.alpha_mask.cuda()
-            print('image shape', image.shape, 'alpha_mask shape', alpha_mask.shape)
+            # print('image shape', image.shape, 'alpha_mask shape', alpha_mask.shape)
             image *= alpha_mask
 
         #* caculate Loss
