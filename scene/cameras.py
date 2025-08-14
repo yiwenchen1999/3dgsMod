@@ -15,6 +15,7 @@ import numpy as np
 from utils.graphics_utils import getWorld2View2, getProjectionMatrix
 from utils.general_utils import PILtoTorch
 import cv2
+import os
 
 class Camera(nn.Module):
     def __init__(self, resolution, colmap_id, R, T, FoVx, FoVy, depth_params, image, invdepthmap,
@@ -87,6 +88,28 @@ class Camera(nn.Module):
         self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0,1).cuda()
         self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
+
+    #& get the vae latents of this camera view
+    def get_latent_feature(self, latent_feature_dir='vae_latents'):
+        """
+        Load latent features for this camera view.
+        
+        Args:
+            latent_feature_dir: Directory containing latent feature files
+            feature_level: Feature level to use (for compatibility with LangSplatMod)
+            
+        Returns:
+            tuple: (latent_feature, mask) where:
+                - latent_feature: torch.Tensor containing VAE latents
+                - mask: torch.Tensor containing validity mask
+        """
+        latent_feature_name = os.path.join(latent_feature_dir, self.image_name)
+        # Load the VAE latents exactly like LangSplatMod
+        feature_map = torch.from_numpy(np.load(latent_feature_name + '.npy'))
+        mask = torch.from_numpy(np.load(latent_feature_name + '_mask.npy'))
+        
+        return feature_map.cuda(), mask.cuda()
+
         
 class MiniCam:
     def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform):
