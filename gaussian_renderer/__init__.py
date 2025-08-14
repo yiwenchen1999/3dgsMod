@@ -33,9 +33,6 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     tanfovx = math.tan(viewpoint_camera.FoVx * 0.5)
     tanfovy = math.tan(viewpoint_camera.FoVy * 0.5)
 
-    print(f"Rendering with tanfovx: {tanfovx}, tanfovy: {tanfovy}, bg_color: {bg_color}, scaling_modifier: {scaling_modifier}")
-    print(f"Image size: {viewpoint_camera.image_width}x{viewpoint_camera.image_height}")
-    print("viewpoint_camera world_view_transform:", viewpoint_camera.world_view_transform.shape)
     #* gaussian rasterization settings, may neeed to change this later when dealing with latents
     raster_settings = GaussianRasterizationSettings(
         image_height=int(viewpoint_camera.image_height),

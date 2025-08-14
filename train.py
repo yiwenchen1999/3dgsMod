@@ -182,6 +182,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             LOSS_L1.append(float(Ll1.item()))
             # save a fresh PNG on schedule or when we run tests
             if (iteration % PLOT_EVERY == 0) or (iteration in testing_iterations) or iteration == 1:
+                print('plotting loss curve')
                 plot_loss_curve(scene.model_path)
             
             if (iteration in saving_iterations):
