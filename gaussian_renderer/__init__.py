@@ -38,10 +38,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     print("viewpoint_camera world_view_transform:", viewpoint_camera.world_view_transform.shape)
 
     raster_settings = GaussianRasterizationSettings(
-        # image_height=int(viewpoint_camera.image_height),
-        # image_width=int(viewpoint_camera.image_width),
-        image_height=100,
-        image_width=100,
+        image_height=int(viewpoint_camera.image_height),
+        image_width=int(viewpoint_camera.image_width),
         tanfovx=tanfovx,
         tanfovy=tanfovy,
         bg=bg_color,
