@@ -40,6 +40,17 @@ try:
 except:
     SPARSE_ADAM_AVAILABLE = False
 
+import matplotlib
+matplotlib.use("Agg")            # headless-safe
+import matplotlib.pyplot as plt
+from collections import deque
+
+# in-memory history for quick plotting (won't grow unbounded)
+LOSS_ITERS  = deque(maxlen=200000)
+LOSS_TOTAL  = deque(maxlen=200000)
+LOSS_L1     = deque(maxlen=200000)
+PLOT_EVERY  = 200   # save a PNG every 200 iters (tweak as you like)
+
 def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from):
 
     #& 1.0 initing dataset, model, and scene
@@ -163,6 +174,15 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
 
             # Log and save
             training_report(tb_writer, iteration, Ll1, loss, l1_loss, iter_start.elapsed_time(iter_end), testing_iterations, scene, render, (pipe, background, 1., SPARSE_ADAM_AVAILABLE, None, dataset.train_test_exp), dataset.train_test_exp)
+            
+            # --- add: accumulate + plot periodically ---
+            LOSS_ITERS.append(iteration)
+            LOSS_TOTAL.append(float(loss.item()))
+            LOSS_L1.append(float(Ll1.item()))
+            # save a fresh PNG on schedule or when we run tests
+            if (iteration % PLOT_EVERY == 0) or (iteration in testing_iterations) or iteration == 1:
+                plot_loss_curve(scene.model_path)
+            
             if (iteration in saving_iterations):
                 print("\n[ITER {}] Saving Gaussians".format(iteration))
                 scene.save(iteration)
@@ -217,6 +237,23 @@ def prepare_output_and_logger(args):
     else:
         print("Tensorboard not available: not logging progress")
     return tb_writer
+
+def plot_loss_curve(out_dir: str):
+    
+    if not LOSS_ITERS:
+        return
+    plt.figure(figsize=(6, 4))
+    plt.plot(list(LOSS_ITERS), list(LOSS_TOTAL), label="total_loss")
+    if LOSS_L1:
+        plt.plot(list(LOSS_ITERS), list(LOSS_L1), label="l1_loss")
+    plt.xlabel("iteration"); plt.ylabel("loss"); plt.title("Training loss")
+    plt.legend(); plt.grid(True, linewidth=0.3)
+    tmp = os.path.join(out_dir, "loss_curve.tmp.png")
+    outp = os.path.join(out_dir, "loss_curve.png")
+    plt.savefig(tmp, dpi=150, bbox_inches="tight")
+    print("Plotting loss curve to", outp)
+    os.replace(tmp, outp)   # atomic-ish write
+    plt.close()
 
 def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_iterations, scene : Scene, renderFunc, renderArgs, train_test_exp):
     if tb_writer:
