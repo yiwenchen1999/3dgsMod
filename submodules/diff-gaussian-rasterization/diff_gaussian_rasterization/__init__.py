@@ -57,6 +57,7 @@ class _RasterizeGaussians(torch.autograd.Function):
     ):
 
         # Restructure arguments the way that the C++ lib expects them
+        print("precomp shape", colors_precomp.shape)
         args = (
             raster_settings.bg, 
             means3D,
